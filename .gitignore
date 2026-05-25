@@ -1,1 +1,10 @@
+myenv/
+*.sh
+*.jar
+__pycache__/
+*.pyc
 .env
+*.csv
+*.pkl
+*.logvenv/
+data/
