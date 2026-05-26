@@ -26,10 +26,11 @@ def fetch_headlines(company_name: str, ticker: str, days_back: int = 7) -> list[
     
     try:
         response = newsapi.get_everything(
-            q=company_name,
+            q=f"{company_name} stock",
             from_param=from_date,
+            domains="reuters.com,bloomberg.com,cnbc.com,ft.com,wsj.com,marketwatch.com,finance.yahoo.com",
             language="en",
-            sort_by="publishedAt",
+            sort_by="relevancy",
             page_size=20
         )
         
@@ -77,6 +78,11 @@ def save_to_csv(data: list[dict], filename: str = "data/headlines.csv"):
         df.to_csv(filename, index=False)
         print(f"[OK] Created {filename} with {len(df)} rows")
 
+    # Remove duplicates after every save
+    df_full = pd.read_csv(filename)                           # read entire file
+    df_full.drop_duplicates(subset=["ticker", "url"], inplace=True)  # remove dupes
+    df_full.to_csv(filename, index=False)                     # overwrite clean
+    print(f"[OK] Deduped. File now has {len(df_full)} rows")
 
 def main():
     all_articles = []
