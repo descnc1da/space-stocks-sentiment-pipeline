@@ -32,11 +32,15 @@ database.py         — SQLite schema and queries
 run_pipeline.py     — orchestrates the full pipeline
 data/               — CSV and database output
 
+## Known Limitations
+
+NewsAPI's free tier has limited access to major financial outlets and returns 
+general market news rather than company-specific articles. A production version 
+would use a dedicated financial data source such as Benzinga, Refinitiv, or 
+Alpha Vantage News API for cleaner per-ticker headlines.
+
 ## Architecture
 *(diagram to be added)*
 
 ## Example Output
 *(screenshot to be added after first full run)*
-
-## Status
-🟡 Week 2 in progress
