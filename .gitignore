@@ -7,5 +7,4 @@ __pycache__/
 *.csv
 *.pkl
 *.logvenv/
-data/
 .DS_Store
