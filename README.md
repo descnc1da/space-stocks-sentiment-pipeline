@@ -4,7 +4,8 @@ A Python pipeline that fetches financial data for selected space tech stocks and
 ## What it does
 - Fetches the latest headlines, price records, intraday data for 5 tickers via EODHD
 - Scores each headline with FinBERT (incremental — only new headlines are scored on re-runs)
-- Stores prices, headlines, sentiment scores, and a personal daily trade log in SQLite
+- Calculates sentiment divergence - how much each ticker's sentiment deviates from the sector average on a given day, using only company-specific articles for the baseline.
+- Stores prices, headlines, sentiment scores, and a daily interpretation log in SQLite
 - Builds a Streamlit dashboard with daily signals, rolling sentiment,
 correlation of stock sentiment with volume z-score, headlines per ticker, and daily log.
 
