@@ -99,7 +99,7 @@ This is a learning tool for forming hypotheses about how news sentiment and trad
 - **Rolling sentiment lines**: shows whether it's a sector-wide move or individual stocks reacting to its own catalyst. 
 - **Volume & sentiment**: correlation of stock sentiment with volume z-score to predict daily moves.
 - **Headlines**: explains what drove sentiment and by how much.
-- **Entry rule**: the requirement is improving sentiment trajectory (today > yesterday) AND intraday volume z > 2.0.
+- **Entry rule**: the requirement is improving sentiment trajectory (last session > previous session) AND intraday volume z > 2.0.
 - **Daily log**: I record my prediction before the market opens, score it the next day. """)
 
 # --- SECTION 2: SCORECARDS ---
