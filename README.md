@@ -1,20 +1,25 @@
-# Financial News Sentiment Pipeline
-A Python pipeline that fetches financial news headlines for a watchlist of stocks, 
-scores them for sentiment using VADER and FinBERT, and stores results in SQLite 
-for analysis.
+# Financial news sentiment pipeline
+A Python pipeline that fetches financial data for selected space tech stocks and produces trading signals based on sentiment scored with FinBERT.
 
-## Projects in this Series
-This is Project 1 of a 4-project portfolio built over 8 weeks.
+## What it does
+- Fetches the latest headlines, price records, intraday data for 5 tickers via EODHD
+- Scores each headline with FinBERT (incremental — only new headlines are scored on re-runs)
+- Stores prices, headlines, sentiment scores, and a personal daily trade log in SQLite
+- Builds a Streamlit dashboard with daily signals, rolling sentiment,
+correlation of stock sentiment with volume z-score, headlines per ticker, and daily log.
 
-## What It Does
-- Fetches the latest headlines for 5 tickers via NewsAPI
-- Scores each headline with VADER (fast) and FinBERT (accurate)
-- Stores prices, headlines, and sentiment scores in a local SQLite database
-- Surfaces top movers and rolling average sentiment per ticker
+## Signal logic
+- `STRONG SIGNAL` — divergence > 0.15 and volume z-score > 2.0
+- `WEAK SIGNAL - WAIT FOR VOLUME` — divergence > 0.15 but volume z-score ≤ 2.0
+- `NEGATIVE SIGNAL` — divergence < -0.15 and volume z-score > 2.0
+- `SECTOR DAY - STAND ASIDE` — more than 3 SpaceX mentions detected (sector-wide noise day)
+- `NO SIGNAL` — all other cases
 
-## Tech Stack
+Divergence = company sentiment minus sector average for the day, excluding sector-wide articles.
+
+## Tech stack
 - Python 3.13.5
-- NewsAPI · VADER · HuggingFace FinBERT
+- EODHD · HuggingFace FinBERT
 - SQLite · pandas
 - python-dotenv
 
@@ -22,25 +27,49 @@ This is Project 1 of a 4-project portfolio built over 8 weeks.
 1. Clone the repo  
 2. Create a virtual environment: `python -m venv venv && source venv/bin/activate`  
 3. Install dependencies: `pip install -r requirements.txt`  
-4. Copy `.env.example` to `.env` and add your NewsAPI key  
+4. Copy `.env.example` to `.env` and add your EODHD key  
 5. Run: `python run_pipeline.py`
+   > First run downloads the FinBERT model (~400MB) and may appear to hang for a minute — this is normal.
 
 ## Project Structure
-fetch_news.py       — pulls headlines from NewsAPI
-score_sentiment.py  — VADER + FinBERT scoring
+fetch_news.py       — pulls headlines from EODHD
+score_sentiment.py  — FinBERT scoring
 database.py         — SQLite schema and queries
+dashboard.py        — Streamlit dashboard
 run_pipeline.py     — orchestrates the full pipeline
-data/               — CSV and database output
-
-## Known Limitations
-
-NewsAPI's free tier has limited access to major financial outlets and returns 
-general market news rather than company-specific articles. A production version 
-would use a dedicated financial data source such as Benzinga, Refinitiv, or 
-Alpha Vantage News API for cleaner per-ticker headlines.
+data/               — headlines.csv, prices.csv, intraday.csv, pipeline.db (SQLite)
 
 ## Architecture
-*(diagram to be added)*
+```
+run_pipeline.py
+    │
+    ├── 1. run_fetch()
+    │       │
+    │       └── fetch_news.py ──► EODHD API
+    │               │
+    │               ├──► data/headlines.csv
+    │               ├──► data/prices.csv
+    │               └──► data/intraday.csv
+    │
+    ├── 2. run_scoring()
+    │       │
+    │       └── score_sentiment.py (FinBERT)
+    │               │  reads headlines.csv
+    │               │  skips already-scored rows
+    │               └──► data/headlines_scored.csv
+    │
+    └── 3. run_db_store()
+            │
+            └── database.py ──► data/pipeline.db (SQLite)
+                                    ├── headlines
+                                    ├── sentiment
+                                    ├── prices
+                                    ├── intraday
+                                    └── daily_log
+
+dashboard.py (Streamlit)
+    └── queries pipeline.db → signals, charts, log
+```
 
 ## Example Output
-*(screenshot to be added after first full run)*
+![Example output](docs/example_output.png)

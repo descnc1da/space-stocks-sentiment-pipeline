@@ -1,7 +1,10 @@
+import os
 import pandas as pd
 from transformers import pipeline
 
+
 _finbert = None
+
 
 def get_finbert():
     global _finbert
@@ -12,6 +15,7 @@ def get_finbert():
             tokenizer="ProsusAI/finbert"
         )
     return _finbert
+
 
 def score_with_finbert(text: str) -> dict:
     if not text or not isinstance(text, str):
@@ -39,17 +43,47 @@ def score_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
+def add_article_flags(df: pd.DataFrame) -> pd.DataFrame:
+    """Add SpaceX mention flag and sector article flag to headlines."""
+    df['is_spaceX_mention'] = df['title'].str.contains(
+        'SpaceX|SPAX|space IPO', case=False, na=False
+    ).astype(int)
+    df['is_sector_article'] = (
+        df.groupby('url')['ticker'].transform('count') > 1
+    ).astype(int)
+    return df
+
+
+def add_sentiment_divergence(df: pd.DataFrame) -> pd.DataFrame:
+    """Add sector average and divergence per day, excluding sector-wide articles."""
+    df['_date'] = pd.to_datetime(df['published_at']).dt.date
+    
+    # only use company-specific articles for the sector baseline
+    company_only = df[df['is_sector_article'] == 0]
+    
+    daily_sector = (
+        company_only
+        .groupby('_date')['compound']
+        .mean()
+        .rename('sector_sentiment')
+    )
+    
+    df = df.join(daily_sector, on='_date').drop(columns=['_date'])
+    df['sentiment_divergence'] = df['compound'] - df['sector_sentiment']
+    return df
+
+
 def load_headlines(filepath: str = "data/headlines.csv") -> pd.DataFrame:
     """Load headlines CSV produced by fetch_news.py."""
     df = pd.read_csv(filepath)
     print(f"[OK] Loaded {len(df)} headlines from {filepath}")
     return df
 
-
 def save_scored(df: pd.DataFrame, filepath: str = "data/headlines_scored.csv"):
     """Save scored DataFrame to CSV."""
     df.to_csv(filepath, index=False)
     print(f"[OK] Saved scored headlines to {filepath}")
+
 
 def print_summary(df: pd.DataFrame):
     """Print most positive and most negative headline per ticker."""
@@ -73,7 +107,23 @@ def print_summary(df: pd.DataFrame):
 
 def main():
     df = load_headlines()
-    df = score_dataframe(df)
+    df = add_article_flags(df)
+
+    scored_path = "data/headlines_scored.csv"
+    if os.path.exists(scored_path):
+        existing_scores = pd.read_csv(scored_path)[['ticker', 'url', 'sentiment_label', 'sentiment_score', 'compound']]
+        df = df.merge(existing_scores, on=['ticker', 'url'], how='left')
+        unscored = df['sentiment_label'].isna()
+        if unscored.any():
+            print(f"[INFO] Scoring {unscored.sum()} new headlines, skipping {(~unscored).sum()} already scored")
+            new_scores = score_dataframe(df[unscored].copy())
+            df.loc[unscored, ['sentiment_label', 'sentiment_score', 'compound']] = new_scores[['sentiment_label', 'sentiment_score', 'compound']].values
+        else:
+            print("[INFO] All headlines already scored, skipping FinBERT.")
+    else:
+        df = score_dataframe(df)
+
+    df = add_sentiment_divergence(df)
     save_scored(df)
     print_summary(df)
 
