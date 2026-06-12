@@ -11,7 +11,7 @@ from database import (
 
 
 st.set_page_config(
-    page_title="Space Stocks Sentiment Dashboard",
+    page_title="Space stocks sentiment dashboard",
     layout="wide"
 )
 
