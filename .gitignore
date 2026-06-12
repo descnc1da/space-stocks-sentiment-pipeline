@@ -8,6 +8,5 @@ __pycache__/
 *.pkl
 *.logvenv/
 data/
-docs/
 .db
 .DS_Store

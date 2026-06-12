@@ -72,4 +72,5 @@ dashboard.py (Streamlit)
 ```
 
 ## Example Output
-![Example output](docs/example_output.png)
+![Example output 1](docs/example_output1.png)
+![Example output 2](docs/example_output2.png)
