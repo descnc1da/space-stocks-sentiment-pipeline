@@ -103,7 +103,7 @@ This is a learning tool for forming hypotheses about how news sentiment and trad
 - **Daily log**: I record my prediction before the market opens, score it the next day. """)
 
 # --- SECTION 2: SCORECARDS ---
-st.subheader("Today's signals")
+st.subheader("Last session signals")
 
 conn = get_connection()
 scorecard_rows = []
