@@ -257,7 +257,7 @@ time_range = st.radio(
 # --- SECTION 5: ENTRY RULE EVALUATOR ---
 with st.expander("📋 Entry rule check", expanded=False):
     st.markdown("""
-    **Rule:** Sentiment trajectory improving (today > yesterday) **AND** volume z-score > 2.0
+    **Rule:** Sentiment trajectory improving (last session > previous session) **AND** volume z-score > 2.0
     """)
     conn = get_connection()
     yesterday = prev_trading_day(target_date)
@@ -283,7 +283,7 @@ with st.expander("📋 Entry rule check", expanded=False):
         volume_confirms = peak_z >= 2.0
 
         col1, col2, col3 = st.columns(3)
-        col1.metric("Sentiment today", f"{today_s:+.2f}", f"{today_s - yesterday_s:+.2f} vs yesterday")
+        col1.metric(f"Sentiment {target_date}", f"{today_s:+.2f}", f"{today_s - yesterday_s:+.2f} vs prev session")
         col2.metric("Peak volume z", f"{peak_z:.2f}", "✅ confirms" if volume_confirms else "❌ no confirm")
         col3.metric("Entry rule", "✅ MET" if (improving and volume_confirms) else "❌ NOT MET")
     else:
